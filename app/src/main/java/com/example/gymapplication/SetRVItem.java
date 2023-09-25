@@ -3,9 +3,14 @@ package com.example.gymapplication;
 public class SetRVItem {
     String setValue;
     String weightValue;
+
+    boolean isClicked;
+
+
     public SetRVItem(String setValue, String weightValue) {
         this.setValue = setValue;
         this.weightValue = weightValue;
+        this.isClicked = false;
     }
 
     public String getSetValue() {
@@ -24,5 +29,12 @@ public class SetRVItem {
         this.weightValue = weightValue;
     }
 
+    public boolean isClicked() {
+        return isClicked;
+    }
+
+    public void setClicked(boolean clicked) {
+        isClicked = clicked;
+    }
 
 }
