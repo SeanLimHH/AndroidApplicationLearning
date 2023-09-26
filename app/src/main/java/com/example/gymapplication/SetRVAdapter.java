@@ -1,10 +1,13 @@
 package com.example.gymapplication;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,10 +21,12 @@ import java.util.List;
 public class SetRVAdapter extends RecyclerView.Adapter<SetRVAdapter.SetRVViewHolder> {
     Context context;
     ArrayList<SetRVItem> setItems;
+    private RecyclerView recyclerView;
 
-    public SetRVAdapter(Context context, ArrayList<SetRVItem> setItems) {
+    public SetRVAdapter(Context context, ArrayList<SetRVItem> setItems, RecyclerView recyclerView) {
         this.context = context;
         this.setItems = setItems;
+        this.recyclerView = recyclerView;
     }
 
     @NonNull
@@ -38,6 +43,23 @@ public class SetRVAdapter extends RecyclerView.Adapter<SetRVAdapter.SetRVViewHol
         holder.weightValue.setText(item.getWeightValue());
         boolean isVisible = item.isClicked;
         holder.linearLayout.setVisibility(isVisible ? View.VISIBLE : View.GONE); // Propagates this property to child
+        holder.addSet.setVisibility(item.isClicked() ? View.VISIBLE : View.GONE);
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int adapterPosition = holder.getAdapterPosition();
+
+                if (adapterPosition != RecyclerView.NO_POSITION) {
+                    item.setClicked(!item.isClicked());
+                    notifyItemChanged(adapterPosition);
+                    recyclerView.smoothScrollToPosition(adapterPosition);
+
+                }
+            }
+        });
+
+
     }
 
     @Override
@@ -47,9 +69,11 @@ public class SetRVAdapter extends RecyclerView.Adapter<SetRVAdapter.SetRVViewHol
 
     public class SetRVViewHolder extends RecyclerView.ViewHolder {
 
-        TextView setValue;
-        TextView weightValue;
+        EditText setValue;
+        EditText weightValue;
         Button addSet;
+        Button editSet;
+        Button deleteSet;
         LinearLayout linearLayout;
 
         public SetRVViewHolder(@NonNull View itemView) {
@@ -58,18 +82,38 @@ public class SetRVAdapter extends RecyclerView.Adapter<SetRVAdapter.SetRVViewHol
             weightValue = itemView.findViewById(R.id.weightValueItemElement);
             linearLayout = itemView.findViewById(R.id.linearLayoutForButtonItemElement);
             addSet = itemView.findViewById(R.id.addSetButtonItemElement);
-            setValue.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    SetRVItem itemSelected = setItems.get(getAdapterPosition());
-                    itemSelected.setClicked(!itemSelected.isClicked());
-                    notifyItemChanged(getAdapterPosition());
-                }
-            });
+            deleteSet = itemView.findViewById(R.id.deleteSetButtonItemElement);
+            editSet = itemView.findViewById(R.id.editSetButtonItemElement);
+
             addSet.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(context, "Add set clicked!", Toast.LENGTH_SHORT).show();
+                    int position = getAdapterPosition();
+
+                    if (position != RecyclerView.NO_POSITION) {
+                        SetRVItem item = setItems.get(position);
+                        item.setClicked(!item.isClicked());
+                        notifyItemChanged(position);
+
+                        SetRVItem newItem = new SetRVItem("9999", "99999");
+                        setItems.add(position+1, newItem);
+                        notifyItemInserted(position + 1);
+                    }
+                }
+            });
+
+            deleteSet.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    int position = getAdapterPosition();
+
+                    if (position != RecyclerView.NO_POSITION) {
+                        notifyItemChanged(position);
+
+                        setItems.remove(position);
+                        notifyItemRemoved(position);
+                    }
                 }
             });
         }

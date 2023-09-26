@@ -1,5 +1,7 @@
 package com.example.gymapplication;
 
+import android.util.Log;
+
 public class SetRVItem {
     String setValue;
     String weightValue;
@@ -35,6 +37,8 @@ public class SetRVItem {
 
     public void setClicked(boolean clicked) {
         isClicked = clicked;
+
+        Log.v("Your Filter", "CLICKED");
     }
 
 }

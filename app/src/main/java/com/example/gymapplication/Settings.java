@@ -42,7 +42,7 @@ public class Settings extends Fragment {
         setItems.add(new SetRVItem("12 Reps", "25kg"));
 
         // Set up the RecyclerView and adapter
-        setRVAdapter = new SetRVAdapter(requireContext(), setItems);
+        setRVAdapter = new SetRVAdapter(requireContext(), setItems, recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(setRVAdapter);
 
