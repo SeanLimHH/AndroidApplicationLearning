@@ -75,6 +75,7 @@ public class SetRVAdapter extends RecyclerView.Adapter<SetRVAdapter.SetRVViewHol
         Button editSet;
         Button deleteSet;
         LinearLayout linearLayout;
+        DatabaseHelper db = new DatabaseHelper(context);
 
         public SetRVViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -95,7 +96,7 @@ public class SetRVAdapter extends RecyclerView.Adapter<SetRVAdapter.SetRVViewHol
                         item.setClicked(!item.isClicked());
                         notifyItemChanged(position);
 
-                        SetRVItem newItem = new SetRVItem("9999", "99999");
+                        SetRVItem newItem = new SetRVItem(db.getNextId(), String.valueOf(db.getNextId()), String.valueOf(db.getNextId()));
                         setItems.add(position+1, newItem);
                         notifyItemInserted(position + 1);
                     }

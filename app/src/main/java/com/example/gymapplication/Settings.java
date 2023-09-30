@@ -1,6 +1,9 @@
 package com.example.gymapplication;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -11,6 +14,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +23,7 @@ import android.widget.FrameLayout;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class Settings extends Fragment {
 
@@ -32,15 +37,11 @@ public class Settings extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        // Initialize the RecyclerView
+        setItems = new ArrayList<>();
+
         recyclerView = view.findViewById(R.id.setRVContainer);
 
-        // Create dummy data
-        setItems = new ArrayList<>();
-        setItems.add(new SetRVItem("10 Reps", "20kg"));
-        setItems.add(new SetRVItem("15 Reps", "30kg"));
-        setItems.add(new SetRVItem("12 Reps", "25kg"));
-
+        setItems.add(new SetRVItem(100,"999","9999"));
         // Set up the RecyclerView and adapter
         setRVAdapter = new SetRVAdapter(requireContext(), setItems, recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -49,9 +50,108 @@ public class Settings extends Fragment {
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
 
+
+
+
         return view;
     }
+    @Override
+    public void onResume() {
+        super.onResume();
 
+        // Refresh the data when returning from the stopped state
+        setItems.addAll(loadSetsFromDatabase());
+        setRVAdapter.notifyDataSetChanged();
+    }
+    private ArrayList<SetRVItem> loadSetsFromDatabase() {
+        ArrayList<SetRVItem> sets = new ArrayList<>();
+
+        DatabaseHelper databaseHelper = new DatabaseHelper(requireContext());
+        SQLiteDatabase db = databaseHelper.getReadableDatabase();
+
+        // Query all sets
+        Cursor cursor = db.query("sets", null, null, null, null, null, null);
+        int columnIndexId = cursor.getColumnIndex("id");
+        int columnIndexSetValue = cursor.getColumnIndex("setValue");
+        int columnIndexWeightValue = cursor.getColumnIndex("weightValue");
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                int setID = cursor.getInt(columnIndexId);
+                String setValue = cursor.getString(columnIndexSetValue);
+                String setWeight = cursor.getString(columnIndexWeightValue);
+                SetRVItem set = new SetRVItem(setID, setValue, setWeight);
+                sets.add(set);
+            }
+            cursor.close();
+        }
+
+        db.close();
+        return sets;
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        replaceItemsWithDatabase(setItems);
+        setRVAdapter.notifyDataSetChanged();
+    }
+
+    private void replaceItemsWithDatabase(ArrayList<SetRVItem> currentSetItems) {
+        DatabaseHelper databaseHelper = new DatabaseHelper(requireContext());
+
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+        try {
+            // Assuming that the 'id' is the unique identifier in your database
+            // 1. Delete existing data
+            db.delete("sets", null, null);
+            for (SetRVItem currentItem : currentSetItems) {
+                ContentValues values = new ContentValues();
+                values.put("id", currentItem.getId());
+                values.put("setValue", currentItem.getSetValue().toString());
+                values.put("weightValue", currentItem.getWeightValue().toString());
+
+
+
+                // 2. Insert new data
+                db.insert("sets", null, values);
+
+
+            }
+
+            // Additional logic for handling deletions or insertions, if needed
+            // For example, compare currentSetItems with the original setItems
+            // and insert or delete items as needed
+
+        } finally {
+            db.close();
+        }
+    }
+
+    private void performCrudOperations(List<SetRVItem> currentSetItems) {
+        DatabaseHelper databaseHelper = new DatabaseHelper(requireContext());
+        SQLiteDatabase db = databaseHelper.getWritableDatabase();
+
+        try {
+            // Assuming that the 'id' is the unique identifier in your database
+            for (SetRVItem currentItem : currentSetItems) {
+                ContentValues values = new ContentValues();
+                values.put("id", currentItem.getId()+1);
+                values.put("setValue", currentItem.getSetValue().toString());
+                values.put("weightValue", currentItem.getWeightValue().toString());
+
+                // Update the existing set in the database
+                db.insert("sets", null, values);
+            }
+
+            // Additional logic for handling deletions or insertions, if needed
+            // For example, compare currentSetItems with the original setItems
+            // and insert or delete items as needed
+
+        } finally {
+            db.close();
+        }
+    }
 
     ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END, 0) {
         @Override

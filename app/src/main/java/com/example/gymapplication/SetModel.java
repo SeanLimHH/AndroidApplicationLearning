@@ -1,23 +1,14 @@
 package com.example.gymapplication;
 
-import android.util.Log;
-
-public class SetRVItem {
-
+public class SetModel {
     Integer id;
     String setValue;
     String weightValue;
-
-    boolean isClicked;
-
-    public SetRVItem(Integer id, String setValue, String weightValue) {
+    public SetModel(Integer id, String setValue, String weightValue) {
         this.id = id;
         this.setValue = setValue;
         this.weightValue = weightValue;
-        this.isClicked = false;
     }
-
-
     public Integer getId() {
         return id;
     }
@@ -42,14 +33,6 @@ public class SetRVItem {
         this.weightValue = weightValue;
     }
 
-    public boolean isClicked() {
-        return isClicked;
-    }
 
-    public void setClicked(boolean clicked) {
-        isClicked = clicked;
-
-        Log.v("Your Filter", "CLICKED");
-    }
 
 }
