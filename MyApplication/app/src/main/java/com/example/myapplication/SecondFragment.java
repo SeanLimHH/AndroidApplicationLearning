@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link SecondFragment#newInstance} factory method to
@@ -99,6 +101,13 @@ public class SecondFragment extends Fragment {
                         .replace(R.id.fragmentContainer, new FirstFragment())
                         .addToBackStack(null)
                         .commit();
+            }
+        });
+        sharedViewModel.getSharedItem().observe(getViewLifecycleOwner(), new Observer<ArrayList<String>>() {
+            @Override
+            public void onChanged(ArrayList<String> newArrayListToUpdate) {
+                Toast.makeText(requireContext(), "Fragment 2: " + newArrayListToUpdate, Toast.LENGTH_SHORT).show();
+
             }
         });
 

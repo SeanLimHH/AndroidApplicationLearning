@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link FirstFragment#newInstance} factory method to
@@ -35,6 +37,8 @@ public class FirstFragment extends Fragment {
     private Button button;
 
     private Button nav;
+
+    private Button addToArrayList;
 
     private SharedViewModel sharedViewModel;
 
@@ -80,19 +84,22 @@ public class FirstFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_first, container, false);
+        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
+
         editText = view.findViewById(R.id.firstFragmentText);
         nav = view.findViewById(R.id.navigateToSecond);
         // Obtain the SharedViewModel
-        sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
 
+        editText.setHint(sharedViewModel.getSharedText().getValue());
         // Observe the LiveData in the SharedViewModel
         sharedViewModel.getSharedText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
-            public void onChanged(String newText) {
+            public void onChanged(String newTextToUpdate) {
                 // Display a Toast message with the new text
-                Toast.makeText(requireContext(), "Fragment 1: " + newText, Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Fragment 1: " + newTextToUpdate, Toast.LENGTH_SHORT).show();
             }
         });
+
         button = view.findViewById(R.id.firstFragmentButton);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,6 +120,23 @@ public class FirstFragment extends Fragment {
                         .commit();
             }
         });
+        addToArrayList = view.findViewById(R.id.addToArrayList);
+        addToArrayList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String text = editText.getText().toString();
+                sharedViewModel.setSharedItem(text);
+            }
+        });
+
+        sharedViewModel.getSharedItem().observe(getViewLifecycleOwner(), new Observer<ArrayList<String>>() {
+            @Override
+            public void onChanged(ArrayList<String> newArrayListToUpdate) {
+                Toast.makeText(requireContext(), "Fragment 1: " + newArrayListToUpdate, Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
         return view;
     }
 }
