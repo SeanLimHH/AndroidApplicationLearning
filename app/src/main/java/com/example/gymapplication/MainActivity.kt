@@ -1,5 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
-    ExperimentalComposeUiApi::class
+    ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class
 )
 
 package com.example.gymapplication
@@ -7,27 +7,38 @@ package com.example.gymapplication
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
@@ -104,18 +115,37 @@ fun noteLabelProgramme(modifier: Modifier) {
 
 @Composable
 fun noteProgramme(text: String, modifier: Modifier) {
-    var currentText by rememberSaveable { mutableStateOf(text) }
-    val keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current
+    var text by rememberSaveable { mutableStateOf(text) }
+    var isFocused by remember { mutableStateOf(false) }
+    val isVisible by remember {
+        derivedStateOf {
+            text.isNotBlank() && isFocused
+        }
+    }
 
     OutlinedTextField(
-        value = currentText,
+        value = text,
         onValueChange = {
-            currentText = it
+            text = it
         },
-        shape = RoundedCornerShape(8.dp),
-//        keyboardActions = KeyboardActions(
-//            onDone = {keyboardController?.hide()}),
-        modifier = modifier
+        trailingIcon = {
+            if (isVisible) {
+                IconButton(
+                    onClick = { text = "" }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear"
+                    )
+                }
+            }
+        },
+        modifier = modifier.onFocusChanged {
+            if (it.isFocused) {
+                isFocused = true
+
+            } else {isFocused = false}
+        }
     )
 }
 
