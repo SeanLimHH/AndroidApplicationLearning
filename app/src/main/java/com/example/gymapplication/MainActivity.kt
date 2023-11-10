@@ -1,25 +1,24 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class,
-    ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class
+    ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalComposeUiApi::class
 )
 
 package com.example.gymapplication
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,19 +28,20 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.example.gymapplication.ui.theme.GymApplicationTheme
 
@@ -72,34 +72,54 @@ class MainActivity : ComponentActivity() {
 }
 
 
-private fun getNotesDataListDummy() = List(10) { i -> Notes(i, "Description # $i", i) }
+private fun getNotesDataListDummy() = mutableStateListOf<Notes>()
+// Hardcoded dummy notes list for testing
+val dummyNotesList = listOf<Notes>(
+    Notes(noteID = 0, noteDescription = "Note 0", sortOrder = 0),
+    Notes(noteID = 1, noteDescription = "Note 1", sortOrder = 1),
+    Notes(noteID = 2, noteDescription = "Note 2", sortOrder = 2),
+    Notes(noteID = 3, noteDescription = "Note 3", sortOrder = 3),
+    Notes(noteID = 4, noteDescription = "Note 4", sortOrder = 4)
+)
 
 @Composable
 fun noteSectionProgramme() {
-    var notesList by rememberSaveable { mutableStateOf(getNotesDataListDummy()) }
+    val notesList = remember { mutableStateListOf(*dummyNotesList.toTypedArray()) }
 
-    Column(modifier = Modifier.verticalScroll(rememberScrollState())
-    ){
-        noteLabelProgramme(modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp))
-        Column(modifier = Modifier
-        ) {
-            notesList.forEach() {
-                note -> noteProgramme(text = note.noteDescription, modifier = Modifier
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        noteLabelProgramme(
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp))}
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
+        Column {
+            notesList.forEachIndexed { index, note ->
+                noteProgramme(
+                    note = note,
+                    removeNote = { notesList.removeAt(index) },
+                    updateDescription = { updatedNoteDescription ->
+                        notesList[index] = notesList[index].copy(noteDescription = updatedNoteDescription)
+
+                        // Log the new value
+                        Log.d("NoteProgramme", "Note item: ${notesList[index]}")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
+
         addNoteProgramme(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             val newNote = Notes(notesList.size, "Added note!", notesList.size)
-            notesList = notesList + listOf(newNote)
+            notesList.add(newNote)
         }
     }
-
 }
 
 
@@ -114,24 +134,34 @@ fun noteLabelProgramme(modifier: Modifier) {
 }
 
 @Composable
-fun noteProgramme(text: String, modifier: Modifier) {
-    var text by rememberSaveable { mutableStateOf(text) }
-    var isFocused by remember { mutableStateOf(false) }
-    val isVisible by remember {
-        derivedStateOf {
-            text.isNotBlank() && isFocused
-        }
-    }
+fun noteProgramme(
+    note: Notes,
+    removeNote: () -> Unit,
+    updateDescription: (String) -> Unit,
+    modifier: Modifier
+) {
+    var isFocused by rememberSaveable { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     OutlinedTextField(
-        value = text,
-        onValueChange = {
-            text = it
+        value = note.noteDescription,
+        onValueChange = { newDescription ->
+            updateDescription(newDescription)
+
         },
         trailingIcon = {
-            if (isVisible) {
+            if (isFocused) {
                 IconButton(
-                    onClick = { text = "" }
+                    onClick = {
+                        if (!(note.noteDescription === "")) {
+                            updateDescription("")
+                        } else {
+                            focusManager.clearFocus()
+                            removeNote()
+                            isFocused = false
+                        }
+
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Clear,
@@ -140,12 +170,13 @@ fun noteProgramme(text: String, modifier: Modifier) {
                 }
             }
         },
-        modifier = modifier.onFocusChanged {
-            if (it.isFocused) {
-                isFocused = true
+        modifier = modifier
+            .onFocusChanged { focusState ->
+                isFocused = focusState.isFocused
+                if (!focusState.isFocused) {
 
-            } else {isFocused = false}
-        }
+                }
+            }
     )
 }
 
