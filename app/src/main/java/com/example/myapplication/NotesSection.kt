@@ -45,11 +45,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun NotesSection(
-    viewModelNotes: StateFlow<List<NoteUIState>>,
+    noteUIStateFlow: StateFlow<NoteUIState>,
     onCreateNote: (String) -> Unit,
     updateNoteDescription: (Long, String) -> Unit,
     onDeleteNote: (Long) -> Unit
@@ -57,7 +58,11 @@ fun NotesSection(
 
     val programmeDescription = "Programme Description Text"
 
-    val noteList = viewModelNotes.collectAsState()
+    val noteUIState = noteUIStateFlow.collectAsState().value
+
+    val noteList  = noteUIState.notesList
+
+    val noteLabel = noteUIState.label
 
     val focusManager = LocalFocusManager.current
 
@@ -105,17 +110,17 @@ fun NotesSection(
                 )
             }
 
-            items(items = noteList.value) { note ->
+            items(items = noteList) { note ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Display your text field here
                     Log.d("noteUIStateItem", note.toString())
-                    Log.d("noteUIStateItem index which is a derived state", note.sortIndex.toString()) // Conceptually, what is going on here is that you are calling the custom property
-                    OutlinedTextFieldNoteDescription(updateNoteDescription, onDeleteNote, notesSectionContext, note)
-                }
+                    Log.d("noteUIStateItem index which is a derived state", note.sortIndex.toString())
 
+                    OutlinedTextFieldNoteDescription(updateNoteDescription, onDeleteNote, note, noteLabel)
+                }
             }
 
             item {
@@ -129,7 +134,7 @@ fun NotesSection(
 
                         // but for now, we will make do with a simple updating of the parent local StateFlow List<String>: The following is not proper! But for now it is ok
 
-                        onCreateNote("Test description")
+                        onCreateNote("")
 
 
                     },
@@ -162,21 +167,21 @@ fun NotesSection(
 }
 
 @Composable
-fun OutlinedTextFieldNoteDescription( // This is like a wrapper for each note item.
+fun OutlinedTextFieldNoteDescription(
     onUpdateNote: (Long, String) -> Unit,
     onDeleteNote: (Long) -> Unit,
-    context: Context,
-    note: NoteUIState,
+    note: NoteModel,
+    label: String
 ) {
+
     var isEditing by remember { mutableStateOf(true) }
 
     OutlinedTextField(
         value = note.description,
-        onValueChange = { //viewModel.updateInputTextFieldAtIndex(index, it)
+        onValueChange = {
             onUpdateNote(note.id, it)
-
         },
-        label = {Text(note.label)},
+        label = { Text(label) },
         modifier = Modifier
             .fillMaxWidth()
             .onFocusChanged {
@@ -185,7 +190,7 @@ fun OutlinedTextFieldNoteDescription( // This is like a wrapper for each note it
                 Log.d("TE2", isEditing.toString())
             },
         trailingIcon = {
-            
+
             if (isEditing) {
                 IconButton(
                     onClick = {
@@ -204,6 +209,3 @@ fun OutlinedTextFieldNoteDescription( // This is like a wrapper for each note it
             }
         })
 }
-
-
-

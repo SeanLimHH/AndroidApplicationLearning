@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "Notes") {
 
                         composable("Notes") { NotesSection(
-                            viewModel.currentNotesUI,
+                            viewModel.noteUIState,
                             viewModel::createNote,
                             viewModel::updateNoteDescription,
                             viewModel::deleteNote)
@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NotesSection(
 
-                            viewModel.currentNotesUI,
+                            viewModel.noteUIState,
                             viewModel::createNote,
                             viewModel::updateNoteDescription,
                             viewModel::deleteNote)
