@@ -6,6 +6,9 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,9 +27,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -34,13 +44,14 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun NotesSection(
     viewModelNotes: StateFlow<List<NoteUIState>>,
     onCreateNote: (String) -> Unit,
-    onUpdateNote: (Long, String) -> Unit,
+    updateNoteDescription: (Long, String) -> Unit,
     onDeleteNote: (Long) -> Unit
 ) {
 
@@ -102,7 +113,7 @@ fun NotesSection(
                     // Display your text field here
                     Log.d("noteUIStateItem", note.toString())
                     Log.d("noteUIStateItem index which is a derived state", note.sortIndex.toString()) // Conceptually, what is going on here is that you are calling the custom property
-                    OutlinedTextFieldNoteDescription(onUpdateNote, onDeleteNote, notesSectionContext, note)
+                    OutlinedTextFieldNoteDescription(updateNoteDescription, onDeleteNote, notesSectionContext, note)
                 }
 
             }
@@ -157,6 +168,8 @@ fun OutlinedTextFieldNoteDescription( // This is like a wrapper for each note it
     context: Context,
     note: NoteUIState,
 ) {
+    var isEditing by remember { mutableStateOf(true) }
+
     OutlinedTextField(
         value = note.description,
         onValueChange = { //viewModel.updateInputTextFieldAtIndex(index, it)
@@ -164,25 +177,33 @@ fun OutlinedTextFieldNoteDescription( // This is like a wrapper for each note it
 
         },
         label = {Text(note.label)},
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .onFocusChanged {
+                Log.d("TE", isEditing.toString())
+                isEditing = !isEditing
+                Log.d("TE2", isEditing.toString())
+            },
         trailingIcon = {
-            // Add a clear icon with an onClick event
-            IconButton(
-                onClick = {
-                    // Call the clear function with the corresponding index
-                    // Toast.makeText(context, "Clear icon clicked! Pass callback to update view model to make this input text field empty", Toast.LENGTH_SHORT).show()
-                    onDeleteNote(note.id)
-                    //viewModel.clearInputTextFieldAtIndex(index)
+            
+            if (isEditing) {
+                IconButton(
+                    onClick = {
+                        if (note.description == "") {
+                            onDeleteNote(note.id)
+                        } else {
+                            onUpdateNote(note.id, "")
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear"
+                    )
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = "Clear"
-                )
             }
-        },
-
-
-    )
+        })
 }
+
+
 

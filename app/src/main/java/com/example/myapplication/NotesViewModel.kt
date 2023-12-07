@@ -20,16 +20,15 @@ class NotesViewModel(
 ) : ViewModel() {
 
     //.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    private var _currentNotes =
+    private var _currentNotesFromDatabase =
         noteRepository.readAllNotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    val currentNotesUI: StateFlow<List<NoteUIState>> = _currentNotes
+
+    val currentNotesUI: StateFlow<List<NoteUIState>> = _currentNotesFromDatabase
         .map { notes ->
             notes.mapIndexed { index, note ->
                 NoteUIState(
                     id = note.id, // Use the index as the id
-                    label = "Description",
                     description = note.description, // Assuming your Note has a 'content' property
-                    isEditing = false,
                     sortIndex = index
                 )
             }
@@ -41,17 +40,17 @@ class NotesViewModel(
             noteRepository.createNote(description)
         }
     }
-    fun updateNote(noteID: Long, newDescription: String) {
+    fun updateNoteDescription(noteID: Long, newDescription: String) {
         viewModelScope.launch {
             noteRepository.updateNote(noteID, newDescription)
         }
     }
-
     fun deleteNote(noteID: Long) {
         viewModelScope.launch {
             noteRepository.deleteNote(noteID)
         }
     }
+
 
 //
 //
@@ -115,6 +114,5 @@ data class NoteUIState(
     val id: Long = 0,
     val label: String = "Description",
     val description: String = "",
-    val isEditing: Boolean = false,
     val sortIndex: Int = 0
 )
