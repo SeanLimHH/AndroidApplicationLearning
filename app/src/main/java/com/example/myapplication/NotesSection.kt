@@ -5,26 +5,35 @@ package com.example.myapplication
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -38,12 +47,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -175,7 +188,26 @@ fun OutlinedTextFieldNoteDescription(
 ) {
 
     var isEditing by remember { mutableStateOf(true) }
+    val showConfirmDeleteDialog = remember { mutableStateOf(false) }
 
+    when {
+        // ...
+        showConfirmDeleteDialog.value -> {
+            ConfirmDeleteDialog(
+                "Confirm delete?",
+                "Yes",
+                "No",
+                onConfirmation = {
+                    onDeleteNote(note.id)
+                    showConfirmDeleteDialog.value = false
+                },
+                onDismissRequest = {
+                    showConfirmDeleteDialog.value = false
+                }
+            )
+
+        }
+    }
     OutlinedTextField(
         value = note.description,
         onValueChange = {
@@ -195,7 +227,7 @@ fun OutlinedTextFieldNoteDescription(
                 IconButton(
                     onClick = {
                         if (note.description == "") {
-                            onDeleteNote(note.id)
+                            showConfirmDeleteDialog.value = true
                         } else {
                             onUpdateNote(note.id, "")
                         }
@@ -208,4 +240,51 @@ fun OutlinedTextFieldNoteDescription(
                 }
             }
         })
+}
+
+
+@Composable
+fun ConfirmDeleteDialog(
+    questionText: String,
+    confirmationText: String,
+    dismissText: String,
+    onConfirmation: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    Dialog(onDismissRequest = { onDismissRequest() }) {
+        // Draw a rectangle shape with rounded corners inside the dialog
+        Card(
+            modifier = Modifier,
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier,
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = questionText,
+                    modifier = Modifier.padding(16.dp),
+                )
+                Row(
+                    modifier = Modifier,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    TextButton(
+                        onClick = { onDismissRequest() },
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Text(dismissText)
+                    }
+                    TextButton(
+                        onClick = { onConfirmation() },
+                        modifier = Modifier.padding(8.dp),
+                    ) {
+                        Text(confirmationText)
+                    }
+                }
+            }
+        }
+    }
+
 }

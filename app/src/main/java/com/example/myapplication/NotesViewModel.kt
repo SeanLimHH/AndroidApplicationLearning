@@ -2,11 +2,18 @@ package com.example.myapplication
 
 import android.provider.ContactsContract.CommonDataKinds.Note
 import android.util.Log
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
@@ -59,3 +66,5 @@ data class NoteUIState(
     val notesList: List<NoteModel> = emptyList(),
     val label: String = "Description"
 )
+
+
