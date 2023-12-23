@@ -50,6 +50,11 @@ interface CombinedParentChildDAO {
     @Query("DELETE FROM ParentTable WHERE parentID = :parentId")
     suspend fun deleteParentByParentID(parentId: Long)
 
+
+    @Transaction
+    @Query("DELETE FROM ChildTable WHERE childID = :childID")
+    suspend fun deleteChildByChildID(childID: Long)
+
 }
 
 
@@ -94,6 +99,16 @@ class combinedParentChildViewModel(private val combinedParentChildDAO: CombinedP
         }
     }
 
+
+
+    fun deleteChildOnly(childID: Long) {
+        viewModelScope.launch() {
+
+            combinedParentChildDAO.deleteChildByChildID(childID)
+
+
+        }
+    }
 
     private fun observeAllParentsAndChildren() {
         viewModelScope.launch {

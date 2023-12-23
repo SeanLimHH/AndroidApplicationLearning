@@ -108,5 +108,19 @@ fun BasicAddParentChildComposable(
             Text(lastElement.toString())
         }
 
+
+
+        Button(onClick = {
+            if (lastElement != null) {
+                viewModel.deleteChildOnly(lastElement.childModels[1].childID)
+            }
+        }) {
+            Text("Delete the following Child Only")
+        }
+
+        if (isListNotEmpty) {
+            Text(lastElement.toString())
+        }
+
     }
 }
